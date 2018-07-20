@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta name="viewport" content="minimal-ui,width=device-width, initial-scale=1.0, fullscreen=true, maximum-scale=1.0, user-scalable=no", charset="UTF-8" />
+	<meta http-equiv="x-ua-compatible" content="IE=edge" >
+    <title>POS/PLU Livet-Gavet</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+    <script src="./src/js/leaflet.filelayer.js"></script>
+    <script src="./src/js/togeojson.js"></script>
+    <script src="./src/js/jquery-1.12.4.min.js"></script>
+    <link rel="stylesheet" href="./src/leaflet-search.css" />
+    <script src="./src/leaflet-searchb.js"></script>
+	<script src="./src/leaflet.groupedlayercontrol.min.js"></script>
+
+    <style>
+        #map {
+            position: absolute;
+            top:0;
+            left: 0;
+            right: 0;
+            bottom:0;
+        }
+        .info {
+    			text-align: left;
+    			line-height: 18px;
+    			color: #555;
+    			float: left;
+    			margin-right: 8px;
+    		padding: 10px 30px;
+    		font: 12px/14px Arial, Helvetica, sans-serif;
+    		background: white;
+    		background: rgba(255,255,255,0.8);
+    		box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    		border-radius: 5px;
+    	}
+    	.info h4 {
+    		margin: 0 0 5px;
+    		color: #777;
+    	}
+
+    	.legend {
+    		text-align: left;
+    		line-height: 18px;
+    		color: #555;
+    	}
+    	.legend i {
+    		width: 18px;
+    		height: 18px;
+    		float: left;
+    		margin-right: 8px;
+    		opacity: 0.8;
+    		box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    		border-radius: 5px;
+    	}
+		.custom .leaflet-popup-tip,
+			.custom .leaflet-popup-content-wrapper {
+					font: 12px/14px  Helvetica, sans-serif;
+					background: rgba(255,255,255,0.8);
+					box-shadow: 0 0 15px rgba(0,0,0,0.3);
+					border-radius: 5px;
+			}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+	
+	
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+	             maxZoom: 20,
+	              attribution: '&copy; Openstreetmap France | &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              });
+            cadastre = L.tileLayer('http://tms.cadastre.openstreetmap.fr/*/tout/{z}/{x}/{y}.png', {
+              maxZoom: 22,
+              detectRetina: true,
+              attribution: '<a href="http://cadastre.gouv.fr">cadastre.gouv.fr</a>',
+            });
+            cadastresep = L.tileLayer('http://tms.cadastre.openstreetmap.fr/**/tout/{z}/{x}/{y}.png', {
+              maxZoom: 22,
+              detectRetina: true,
+              zIndex: 5,
+              //attribution: '<a href="http://cadastre.gouv.fr">cadastre.gouv.fr</a>',
+            });
+            sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+             maxZoom: 18,
+             detectRetina: false,
+	            attribution: '&copy; Esri'
+            });
+	var osm_light  = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+				opacity: 1,
+				maxZoom: 20,
+		});
+	var osm_dark = L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+				opacity: 1,
+				maxZoom: 20,
+		});
+		
+
+	var Topo =  L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+		maxZoom: 17,
+		edgeBufferTiles: 2,
+		attribution: 'Kartendaten: &copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende, <a href="http://viewfinderpanoramas.org">SRTM</a> | Kartendarstellung: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+            });
+
+      var cadastre_transp = L.tileLayer('http://tms.cadastre.openstreetmap.fr/*/transp/{z}/{x}/{y}.png', {
+        maxZoom: 21,
+		zIndex: 100,
+        attribution: '<a href="http://cadastre.gouv.fr">cadastre.gouv.fr</a>',
+      });
+
+      var cadastresep_transp = L.tileLayer('http://tms.cadastre.openstreetmap.fr/**/transp/{z}/{x}/{y}.png', {
+        maxZoom: 21,
+        zIndex: 101,
+		
+        //attribution: '<a href="http://cadastre.gouv.fr">cadastre.gouv.fr</a>',
+      });
+
+	  
+
+
+
+        var map = L.map('map', {
+            center: [46.5,2.34],
+            zoom: 5,
+            layers: [osm_light]
+        });
+
+        var baseMaps = {
+            "Cadastre (DGFiP)": cadastre,
+            "OpenStreetMap": osm,
+			"OpenStreetMap clair": osm_light,
+			"OpenStreetMap sombre": osm_dark,
+            "Topo.": Topo,
+            "Satellite (ESRI)": sat,
+
+        };
+
+		var customOptions =
+	        {
+	        'maxWidth': '400',
+					'maxHeight': '400',
+	        'className' : 'custom'
+	        }
+			
+
+
+
+        var styleC =  {fillColor:'limegreen', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
+        var styleP =  {fillColor:'orange', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
+        var styleNC =  {fillColor:'red', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
+        var styleNR =  {fillColor:'#666', color:'#666', opacity: 1.0, fillOpacity: 0.5, weight: 1, clickable: true};
+        var transp =  {fillColor:'transparent', color:'#transparent', opacity: 0, fillOpacity: 0, weight: 1, clickable: true};
+		
+		var plu = new L.geoJson();
+		var pos = new L.geoJson();
+		
+		L.Control.FileLayerLoad.LABEL = '<i class="fa fa-folder-open"></i>';// '⌘';
+
+		var control = new L.Control.fileLayerLoad({
+            layer: L.geoJson,
+            fileSizeLimit: 256000,
+            fitBounds: true,
+            layerOptions: {
+              onEachFeature: function (feature, layer) { 
+                   layer.on('mouseover', function highlightFeature(e) {
+                     var layer = e.target;
+                     layer.setStyle({
+                         weight: 2,
+                         color: 'transparent',
+                         dashArray: '',
+                         fillOpacity: 0
+                     });
+
+                     }
+                   );
+                   layer.on('mouseout', function resetHighlight(e) {
+                       layer.resetStyle(e.target);
+                   });
+                   
+				  layer.bindPopup(feature['properties']['Description'],customOptions);
+                 },
+                 style: function(feature){
+					return transp;
+						}
+                 }
+            } 
+			
+           )
+		   control.addTo(map);
+		   
+        control.loader.on('data:loaded', function (e) {
+		//console.log(e.result);
+		var plu = L.geoJson(JSON.parse(e.result), {
+                 onEachFeature: function (feature, layer) {
+                   layer.on('mouseover', function highlightFeature(e) {
+                     var layer = e.target;
+                     layer.setStyle({
+                         weight: 2,
+                         //color: '#666',
+                         dashArray: '',
+                         fillOpacity: 0.9
+                     });
+
+                     }
+                   );
+                   layer.on('mouseout', function resetHighlight(e) {
+                       plu.resetStyle(e.target);
+                   });
+                   
+				  layer.bindPopup(feature['properties']['Description'],customOptions);
+                 },
+                 style: function(feature){
+					switch (feature['properties']['constr_PLU']){
+					case 'Oui': return styleC;
+					case 'partiellement': return styleP;
+					case 'Non': return styleNC;
+					case 'NR': return styleNR;
+						}
+                 }
+
+                 }).addTo(map);
+            var pos = L.geoJson(JSON.parse(e.result), {
+                 onEachFeature: function (feature, layer) {
+                   layer.on('mouseover', function highlightFeature(e) {
+                     var layer = e.target;
+                     layer.setStyle({
+                         weight: 4,
+                         //color: '#666',
+                         dashArray: '',
+                         fillOpacity: 0.9
+                     });
+
+                     }
+                   );
+                   layer.on('mouseout', function resetHighlight(e) {
+                       pos.resetStyle(e.target);
+                   });
+                   
+				  layer.bindPopup(feature['properties']['Description'],customOptions);
+                 },
+                 style: function(feature){
+					switch (feature['properties']['constr_POS']){
+					case 'Oui': return styleC;
+					case 'partiellement': return styleP;
+					case 'Non': return styleNC;
+					case 'NR': return styleNR;
+						}
+                 }
+
+                 });
+            
+		var groupedOverlays = {
+		  "POS/PLU:": {
+			"POS": pos,
+			"PLU":plu
+			},
+			"Cadastre:": {
+         "Cadastre (DGFiP) transparent": cadastre_transp
+		      }
+		};
+		var options_overl = {
+		  // Make the "Landmarks" group exclusive (use radio inputs)
+		  exclusiveGroups: ["POS/PLU:"],
+		  // Show a checkbox next to non-exclusive group labels for toggling all
+		  groupCheckboxes: false,
+		  collapsed:false
+		};
+
+L.control.groupedLayers(baseMaps, groupedOverlays, options_overl).addTo(map);
+ // Remove old control, if any
+             if (window.searchControl)
+             {
+               map.removeControl(window.searchControl);
+             }
+
+
+        window.searchControl= new L.control.search({
+               layer: plu,
+               propertyName: 'rec',
+               initial: false,
+               textErr: 'Parcelle non trouvée',	//error message
+            		textCancel: 'Annuler',		    //title in cancel button
+            		textPlaceholder: 'Rechercher une parcelle...',
+               minLength: 0,					//minimal text length for autocomplete
+            		casesensitive: false,			//search elements in case sensitive text
+            		autoType: true,
+               firstTipSubmit: true,			//auto select first result con enter click
+     		      autoResize: true,
+               tooltipLimit: 5,
+               moveToLocation: function(latlng, title, map) {
+         			//map.fitBounds( latlng.layer.getBounds() );
+         			var zoom = map.getBoundsZoom(latlng.layer.getBounds());
+           			map.setView(latlng, zoom); // access the zoom
+         		}
+            });
+             map.addControl(window.searchControl);
+			 
+			 
+
+        var legend = L.control({position: 'bottomright'});
+	       legend.onAdd = function (map) {
+          var div = L.DomUtil.create('div', 'info legend'),
+
+      	couleurs = ['limegreen', 'orange', 'red', '#666'],
+      	valeurs = ['Constructible', 'En partie constructible', 'Non constructible', 'Non renseigné'],
+      	labels = ['<strong>Légende:</strong>']
+
+
+          for (var i = 0; i < couleurs.length; i++) {
+                 col = couleurs [i];
+                vf=valeurs [i];
+            labels.push(
+                '<i style="background:' + col + '"></i> ' + vf );
+                }
+                div.innerHTML = labels.join('<br>');
+                return div;
+                };
+	  if (!(map.legenddisplay)) {
+          legend.addTo(map);
+          map.legenddisplay = this;}
+
+
+        map.addControl( searchControl );  //inizialize search control
+
+
+
+
+});
+			
+        L.control.scale({imperial: false, maxWidth:300}).addTo(map);
+
+    </script>
+</body>
+</html>
