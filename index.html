@@ -134,8 +134,8 @@
         var baseMaps = {
             "Cadastre (DGFiP)": cadastre,
             "OpenStreetMap": osm,
-			"OpenStreetMap clair": osm_light,
-			"OpenStreetMap sombre": osm_dark,
+	    "OpenStreetMap clair": osm_light,
+	    "OpenStreetMap sombre": osm_dark,
             "Topo.": Topo,
             "Satellite (ESRI)": sat,
 
@@ -151,9 +151,9 @@
 
 
 
-        var styleC =  {fillColor:'limegreen', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
+        var styleC =  {fillColor:'red', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
         var styleP =  {fillColor:'orange', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
-        var styleNC =  {fillColor:'red', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
+        var styleNC =  {fillColor:'limegreen', color:'#666', opacity: 1.0, fillOpacity: 0.7, weight: 1, clickable: true};
         var styleNR =  {fillColor:'#666', color:'#666', opacity: 1.0, fillOpacity: 0.5, weight: 1, clickable: true};
         var transp =  {fillColor:'transparent', color:'#transparent', opacity: 0, fillOpacity: 0, weight: 1, clickable: true};
 		
@@ -308,7 +308,7 @@ L.control.groupedLayers(baseMaps, groupedOverlays, options_overl).addTo(map);
           var div = L.DomUtil.create('div', 'info legend'),
 
       	couleurs = ['limegreen', 'red'],
-      	valeurs = ['Constructible', 'Naturel'],
+      	valeurs = ['Naturel', 'Constructible'],
       	labels = ['<strong>Légende:</strong>']
 
 
